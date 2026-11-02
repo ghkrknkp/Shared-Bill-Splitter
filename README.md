@@ -146,6 +146,17 @@ pnpm --filter bill-splitter-api cf-typegen
 You can use AI tools. Tell us which ones and where in your answers on the form.
 You must understand every line you submit. We check this with your video and in a live call. "The AI wrote it" is not an answer.
 
+## Decisions
+
+1. **Integer Money Representation and Remainder Allocation**:
+   All monetary amounts are treated as integer cents (`total_cents INTEGER`) to eliminate floating-point precision issues. When splitting uneven amounts (e.g. 1000 cents among 3 members), the base share is calculated with integer division (`Math.floor(totalCents / members.length)`), and the remaining cents (`totalCents % members.length`) are assigned sequentially to the earliest added members by their zero-indexed `position`. This guarantees zero fractional discrepancy and deterministic distribution.
+
+2. **Concurrency Control via Conditional SQL Updates**:
+   To prevent double-payment race conditions when two requests target the same share concurrently, payment logic uses an atomic conditional update (`UPDATE shares SET paid_at = ?, idempotency_key = ? WHERE id = ? AND paid_at IS NULL`). Combined with a database-level `UNIQUE(idempotency_key)` constraint, only the first transaction modifies the row, while concurrent attempts inspect the updated state to either replay the response (for identical idempotency keys) or reject with `409 Conflict`.
+
+3. **Atomic Transactional Ingestion using D1 Batching**:
+   Creating a bill and inserting its individual shares is executed via `c.env.DB.batch(...)`. This bundles the `bills` insert and all subsequent `shares` inserts into a single atomic transaction in Cloudflare D1. If any share insertion fails, the entire transaction rolls back, preventing orphaned bill headers or partial splits.
+
 ## How to submit
 
 1. Click **Use this template**, then **Create a new repository**. Make the repository **public**.
