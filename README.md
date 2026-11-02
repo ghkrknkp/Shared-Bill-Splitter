@@ -157,6 +157,10 @@ You must understand every line you submit. We check this with your video and in 
 3. **Atomic Transactional Ingestion using D1 Batching**:
    Creating a bill and inserting its individual shares is executed via `c.env.DB.batch(...)`. This bundles the `bills` insert and all subsequent `shares` inserts into a single atomic transaction in Cloudflare D1. If any share insertion fails, the entire transaction rolls back, preventing orphaned bill headers or partial splits.
 
+## Video Walkthrough
+
+- **Loom Video Explanation**: [https://www.loom.com/share/eabb11fb00d34afb9b1636e2ee775dd8](https://www.loom.com/share/eabb11fb00d34afb9b1636e2ee775dd8)
+
 ## How to submit
 
 1. Click **Use this template**, then **Create a new repository**. Make the repository **public**.
